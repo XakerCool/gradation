@@ -5,7 +5,7 @@ const mysql = require('mysql2');
 const cors = require("cors");
 const dotenv = require('dotenv');
 const path = require("path")
-const {logError, logAccess, logSuccess} = require("./logger/logger");
+const {logError} = require("./logger/logger");
 const {addBxLink, getBxCredentials, setConnection, checkIfExists, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getFromDb, getMaxId} = require("./services/db.js");
 
 const {ContactsService} = require("./services/contacts");
@@ -45,7 +45,6 @@ app.use((req, res, next) => {
 
 app.post("/init", async (req, res) => {
     try {
-        logAccess("/init", "initializing bx");
         const raw = req.body;
         if (!raw.bx && !raw.link) {
             res.status(400).json({"status": "error", "message": "Отсутствует название системы!"});
@@ -56,7 +55,6 @@ app.post("/init", async (req, res) => {
             req.session.link = credentials.link; // Сохраняем ссылку в сессии
             req.session.bxId = credentials.bxId;
             req.session.bx = credentials.bx;
-            logSuccess("/init", `bx: ${raw.bx} successfully initialized`);
             res.status(200).json({"status": "success", "message": "Ссылка на битрикс успешно получена!", "link": credentials.link});
         } else {
             res.status(401).json({"status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!"});
@@ -69,7 +67,6 @@ app.post("/init", async (req, res) => {
 
 app.post("/add_bx", async (req, res) => {
     try {
-        logAccess("/add_bx", "adding new bx");
         const raw = req.body;
         if (!raw.bx && !raw.link) {
             res.status(400).json({"status": "error", "message": "Отсутствует название системы или ссылка для входящего вебхука!"});
@@ -79,7 +76,6 @@ app.post("/add_bx", async (req, res) => {
             res.status(409).json({"status": "error", "message": "Данный битрикс уже существует!"});
         } else {
             if(await addBxLink(raw.bx, raw.link, key)) {
-                logSuccess("/add_bx", `new bx successfully added: ${raw.bx}`);
                 res.status(200).json({ "status": "success", "message": "Битрикс успешно добавлен в систему!" })
             } else {
                 res.status(500).json({ "status": "error", "message": "Произошла какая-то ошибка..." })
