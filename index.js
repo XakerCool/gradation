@@ -30,10 +30,7 @@ const key = process.env.ENCRYPTION_KEY;
 
 
 app.use(cors({
-    origin: function (origin, callback) {
-        // Разрешаем запросы с любого домена
-        callback(null, origin);
-    },
+    origin: "https://akraholding.bitrix24.kz/marketplace/app/58/",
     credentials: true
 }));
 app.use(bodyParser.json());
@@ -45,7 +42,8 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        sameSite: 'lax'
+        secure: true, // Устанавливаем true для использования HTTPS
+        sameSite: 'None' // Замените на 'Lax' или 'None' в зависимости от совместимости браузера
     }
 }));
 
