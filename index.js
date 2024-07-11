@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const cors = require("cors");
@@ -28,14 +29,24 @@ const connection = mysql.createConnection({
 const key = process.env.ENCRYPTION_KEY;
 
 
-app.use(cors());
+app.use(cors({
+    origin: function (origin, callback) {
+        // Разрешаем запросы с любого домена
+        callback(null, origin);
+    },
+    credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(cookieParser());
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: {
+        sameSite: 'lax'
+    }
 }));
 
 app.use((req, res, next) => {
