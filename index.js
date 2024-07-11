@@ -35,14 +35,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        // Разрешаем запросы с разрешенных доменов или если origin не определен (например, при локальных запросах)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: "https://akraholding.bitrix24.kz",
     credentials: true
 }));
 app.use(bodyParser.json());
