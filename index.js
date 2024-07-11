@@ -43,7 +43,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.post("/init", async (req, res) => {
+app.post("/gradation/init", async (req, res) => {
     try {
         const raw = req.body;
         if (!raw.bx && !raw.link) {
@@ -65,7 +65,7 @@ app.post("/init", async (req, res) => {
     }
 })
 
-app.post("/add_bx", async (req, res) => {
+app.post("/gradation/add_bx", async (req, res) => {
     try {
         const raw = req.body;
         if (!raw.bx && !raw.link) {
@@ -87,7 +87,7 @@ app.post("/add_bx", async (req, res) => {
     }
 })
 
-app.get("/write_all_contacts_to_db", async (req, res) => {
+app.get("/gradation/write_all_contacts_to_db", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
@@ -106,7 +106,7 @@ app.get("/write_all_contacts_to_db", async (req, res) => {
 
 })
 
-app.get("/write_all_companies_to_db", async (req, res) => {
+app.get("/gradation/write_all_companies_to_db", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
@@ -124,7 +124,7 @@ app.get("/write_all_companies_to_db", async (req, res) => {
     }
 })
 
-app.get("/write_all_deals_to_db", async (req, res) => {
+app.get("/gradation/write_all_deals_to_db", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
@@ -142,7 +142,7 @@ app.get("/write_all_deals_to_db", async (req, res) => {
     }
 })
 
-app.get("/write_deals_from_last_deal_date_to_db", async (req, res) => {
+app.get("/gradation/write_deals_from_last_deal_date_to_db", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
@@ -161,7 +161,7 @@ app.get("/write_deals_from_last_deal_date_to_db", async (req, res) => {
     }
 })
 
-app.get("/set_summary", async (req, res) => {
+app.get("/gradation/set_summary", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
@@ -181,7 +181,7 @@ app.get("/set_summary", async (req, res) => {
     }
 })
 
-app.get("/set_and_return_current_data", async (req, res) => {
+app.get("/gradation/set_and_return_current_data", async (req, res) => {
     try {
         const link = req.session.link || null;
         const bxId = req.session.bxId || null;
