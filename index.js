@@ -28,9 +28,21 @@ const connection = mysql.createConnection({
 
 const key = process.env.ENCRYPTION_KEY;
 
+const allowedOrigins = [
+    'https://cdn-ru.bitrix24.ru',
+    'https://akraholding.bitrix24.kz',
+    'https://akraholding.bitrix24.kz/marketplace/app/58/'
+];
 
 app.use(cors({
-    origin: "https://cdn-ru.bitrix24.ru",
+    origin: function (origin, callback) {
+        // Разрешаем запросы с разрешенных доменов или если origin не определен (например, при локальных запросах)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 app.use(bodyParser.json());
