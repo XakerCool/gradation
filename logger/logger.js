@@ -4,7 +4,7 @@ const path = require('path');
 function logError(source, error) {
     try {
         const currentTime = new Date().toLocaleString();
-        const errorMessage = `${currentTime} - Source: ${source}\nError: ${error.stack}\n\n`;
+        const errorMessage = `${currentTime} - Source: ${source}\nError: ${error.stack||error}\n\n`;
         const logsDir = path.join(__dirname, 'logs');
 
         if (!fs.existsSync(logsDir)) {
