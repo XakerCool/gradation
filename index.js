@@ -63,12 +63,6 @@ app.post("/gradation/init", async (req, res) => {
             req.session.link = credentials.link; // Сохраняем ссылку в сессии
             req.session.bxId = credentials.bxId;
             req.session.bx = credentials.bx;
-            res.cookie('bx_cred', JSON.stringify({ bxId: credentials.bxId, link: credentials.link, bx: credentials.bx }), {
-                maxAge: 900000, // Время жизни куки в миллисекундах (здесь 15 минут)
-                httpOnly: true, // Куки доступны только для HTTP(S) запросов, JavaScript не имеет доступа
-                secure: true, // Устанавливаем true для использования HTTPS
-                sameSite: 'None' // Замените на 'Lax' или 'None' в зависимости от совместимости браузера
-            });
             res.status(200).json({"status": "success", "message": "Ссылка на битрикс успешно получена!", "link": credentials.link});
         } else {
             res.status(401).json({"status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!"});
@@ -197,10 +191,8 @@ app.get("/gradation/set_summary", async (req, res) => {
 
 app.get("/gradation/set_and_return_current_data", async (req, res) => {
     try {
-        const cookies = JSON.parse(req.cookies.bx_cred);
-        logError("watch cookies", cookies)
-        const link = req.session.link || cookies.link || null;
-        const bxId = req.session.bxId || cookies.bxId || null;
+        const link = req.session.link || null;
+        const bxId = req.session.bxId || null;
         if (link && bxId) {
             const contactsService = new ContactsService(link);
             const companiesService = new CompaniesService(link);
