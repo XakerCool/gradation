@@ -197,8 +197,8 @@ app.get("/gradation/set_summary", async (req, res) => {
 
 app.get("/gradation/set_and_return_current_data", async (req, res) => {
     try {
-        const link = req.session.link || req.cookies.link || null;
-        const bxId = req.session.bxId || req.cookies.bxId || null;
+        const link = req.session.link || JSON.parse(req.cookies.bx_cred).link || null;
+        const bxId = req.session.bxId || JSON.parse(req.cookies.bx_cred).bxId || null;
         if (link && bxId) {
             const contactsService = new ContactsService(link);
             const companiesService = new CompaniesService(link);
