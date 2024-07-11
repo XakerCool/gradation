@@ -30,7 +30,7 @@ const key = process.env.ENCRYPTION_KEY;
 
 
 app.use(cors({
-    origin: "https://akraholding.bitrix24.kz/marketplace/app/58/",
+    origin: "https://cdn-ru.bitrix24.ru",
     credentials: true
 }));
 app.use(bodyParser.json());
