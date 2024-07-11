@@ -28,14 +28,8 @@ const connection = mysql.createConnection({
 
 const key = process.env.ENCRYPTION_KEY;
 
-const allowedOrigins = [
-    'https://cdn-ru.bitrix24.ru',
-    'https://akraholding.bitrix24.kz',
-    'https://akraholding.bitrix24.kz/marketplace/app/58/'
-];
-
 app.use(cors({
-    origin: "https://akraholding.bitrix24.kz",
+    origin: "https://cdn-ru.bitrix24.ru",
     credentials: true
 }));
 app.use(bodyParser.json());
