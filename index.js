@@ -189,7 +189,7 @@ app.get("/gradation/set_summary", async (req, res) => {
     }
 })
 
-app.get("/gradation/set_and_return_current_data", async (req, res) => {
+app.post("/gradation/set_and_return_current_data", async (req, res) => {
     try {
         const raw = req.body;
 
