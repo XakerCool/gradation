@@ -191,8 +191,24 @@ app.get("/gradation/set_summary", async (req, res) => {
 
 app.get("/gradation/set_and_return_current_data", async (req, res) => {
     try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
+        const raw = req.body;
+
+        let link = "";
+        let bx = "";
+        let bxId = "";
+        if (!raw.bx && !raw.link) {
+            res.status(400).json({"status": "error", "message": "Отсутствует название системы!"});
+            return;
+        }
+        if (await checkIfExists(raw.bx)) {
+            const credentials = await getBxCredentials(raw.bx, key);
+            link = credentials.link; // Сохраняем ссылку в сессии
+            bxId = credentials.bxId;
+            bx = credentials.bx;
+            res.status(200).json({"status": "success", "message": "Ссылка на битрикс успешно получена!", "link": credentials.link});
+        } else {
+            res.status(401).json({"status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!"});
+        }
         if (link && bxId) {
             const contactsService = new ContactsService(link);
             const companiesService = new CompaniesService(link);
