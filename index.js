@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 const path = require("path");
 const timeout = require("connect-timeout");
 const {logError} = require("./logger/logger");
-const {addBxLink, getBxCredentials, setConnection, checkIfExists, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getFromDb, getMaxId} = require("./services/db.js");
+const {addBxLink, getBxCredentials, setConnection, checkIfExists, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getFromDb, getMaxId, markOnCall} = require("./services/db.js");
 
 const {ContactsService} = require("./services/contacts");
 const {CompaniesService} = require("./services/companies");
@@ -247,6 +247,46 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
         res.status(500).json({ "status": "error", "message": "Что-то пошло не так" });
     }
 }, haltOnTimedOut);
+
+app.post("/gradation/mark_on_call", async (req, res) => {
+    try {
+        const raw = req.body;
+
+        let link = "";
+        let bx = "";
+        let bxId = "";
+        if (!raw.bx && !raw.link) {
+            res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
+            return;
+        }
+        if (await checkIfExists(raw.bx)) {
+            const credentials = await getBxCredentials(raw.bx, key);
+            link = credentials.link; // Сохраняем ссылку в сессии
+            bxId = credentials.bxId;
+            bx = credentials.bx;
+        } else {
+            res.status(401).json({ "status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!" });
+        }
+
+        const clients = raw.clients || null;
+        const companies = raw.companies || null;
+
+        if (link && bxId) {
+            if (clients) {
+                await markOnCall(bxId, clients, "clients");
+            } else if (companies) {
+                await markOnCall(bxId, companies, "companies");
+            } else {
+                res.status(400).json({"status": "error", "message": "Не выбрана ни одна компания/клиент"});
+            }
+        } else {
+            res.status(401).json({ "status": "error", "message": "Пожалуйста, сначала пройдите инициализацию" });
+        }
+    } catch (error) {
+        logError("/gradation/mark_on_call", error);
+        res.status(500).json({"status": "error", "message": "Что-то пошло не так"});
+    }
+})
 
 app.listen(PORT, () => {
     connection.connect((err) => {

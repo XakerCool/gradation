@@ -325,6 +325,36 @@ async function getCompaniesCount(bxId) {
     }
 }
 
+async function markOnCall(bxId, data, table) {
+    try {
+        let query = `UPDATE TABLE`
+
+        switch (table.toLowerCase()) {
+            case "clients":
+                query += ` clients`;
+                break;
+            case "companies":
+                query += ` companies`;
+                break;
+        }
+        query += ` SET on_call = true WHERE b_id = ? AND id_in_bx = ?`;
+
+        // Запускаем транзакцию
+        await connection.beginTransaction();
+
+        for (const item of data) {
+            await connection.execute(query, [bxId, item["id_in_bx"]]);
+        }
+
+        // Подтверждаем транзакцию
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        logError("markOnCall", error);
+        return null;
+    }
+}
+
 async function checkIfExists(bxName) {
     try {
         const query = 'SELECT COUNT(*) AS count FROM bitrixes WHERE bx = ?';
@@ -370,7 +400,7 @@ async function executeQuery(query, params) {
     });
 }
 
-module.exports = { addBxLink, getBxCredentials, checkIfExists, setConnection, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getMaxId, getFromDb };
+module.exports = { addBxLink, getBxCredentials, checkIfExists, setConnection, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getMaxId, getFromDb, markOnCall };
 
 function setConnection(conn) {
     connection = conn;
