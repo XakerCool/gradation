@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const cors = require("cors");
 const dotenv = require('dotenv');
-const path = require("path")
+const path = require("path");
+const timeout = require("connect-timeout");
 const {logError} = require("./logger/logger");
 const {addBxLink, getBxCredentials, setConnection, checkIfExists, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getFromDb, getMaxId} = require("./services/db.js");
 
@@ -50,6 +51,12 @@ app.use((req, res, next) => {
     setConnection(connection);
     next();
 });
+
+app.use(timeout('10m'));
+
+function haltOnTimedOut(req, res, next) {
+    if (!req.timedout) next();
+}
 
 app.post("/gradation/init", async (req, res) => {
     try {
@@ -197,7 +204,7 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
         let bx = "";
         let bxId = "";
         if (!raw.bx && !raw.link) {
-            res.status(400).json({"status": "error", "message": "Отсутствует название системы!"});
+            res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
             return;
         }
         if (await checkIfExists(raw.bx)) {
@@ -206,7 +213,7 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
             bxId = credentials.bxId;
             bx = credentials.bx;
         } else {
-            res.status(401).json({"status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!"});
+            res.status(401).json({ "status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!" });
         }
         if (link && bxId) {
             const contactsService = new ContactsService(link);
@@ -231,15 +238,15 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
             const allCompanies = await getFromDb(bxId, "companies");
             const allDeals = await getFromDb(bxId, "deals");
 
-            res.status(200).json({"status": "success", "total": { "clients": allClients.length, "companies": allCompanies.length, "deals": allDeals.length }, "clients": allClients, "companies": allCompanies, "deals": allDeals});
-        }  else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
+            res.status(200).json({ "status": "success", "total": { "clients": allClients.length, "companies": allCompanies.length, "deals": allDeals.length }, "clients": allClients, "companies": allCompanies, "deals": allDeals });
+        } else {
+            res.status(401).json({ "status": "error", "message": "Пожалуйста, сначала пройдите инициализацию" });
         }
     } catch (error) {
         logError("/write_deals_from_last_deal_date_to_db", error);
-        res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
+        res.status(500).json({ "status": "error", "message": "Что-то пошло не так" });
     }
-})
+}, haltOnTimedOut);
 
 app.listen(PORT, () => {
     connection.connect((err) => {
