@@ -205,7 +205,6 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
             link = credentials.link; // Сохраняем ссылку в сессии
             bxId = credentials.bxId;
             bx = credentials.bx;
-            res.status(200).json({"status": "success", "message": "Ссылка на битрикс успешно получена!", "link": credentials.link});
         } else {
             res.status(401).json({"status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!"});
         }
