@@ -339,17 +339,11 @@ async function markOnCall(bxId, data, table) {
         }
         query += ` SET on_call = true WHERE b_id = ? AND id_in_bx = ?`;
 
-        // Запускаем транзакцию
-        await connection.beginTransaction();
-
         for (const item of data) {
-            await connection.execute(query, [bxId, item["id_in_bx"]]);
+            await executeQuery(query, [bxId, item.id_in_bx]);
         }
 
-        // Подтверждаем транзакцию
-        await connection.commit();
     } catch (error) {
-        await connection.rollback();
         logError("markOnCall", error);
         return null;
     }
