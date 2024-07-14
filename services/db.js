@@ -340,7 +340,7 @@ async function markOnCall(bxId, data, table) {
         query += ` SET on_call = true WHERE b_id = ? AND id_in_bx = ?`;
 
         for (const item of data) {
-            await executeQuery(query, [bxId, item.id_in_bx]);
+            await executeQuery(query, [bxId, item]);
         }
 
     } catch (error) {
