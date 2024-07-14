@@ -327,7 +327,7 @@ async function getCompaniesCount(bxId) {
 
 async function markOnCall(bxId, data, table) {
     try {
-        let query = `UPDATE TABLE`
+        let query = `UPDATE`
 
         switch (table.toLowerCase()) {
             case "clients":
