@@ -33,7 +33,7 @@ class DealsService {
                 }
             });
         } catch (error) {
-            logError("DEALS SERVICE fetchDeals", "error");
+            logError("DEALS SERVICE fetchDeals", error);
             return null;
         }
     }
@@ -62,7 +62,7 @@ class DealsService {
                 }
             });
         } catch (error) {
-            logError("DEALS SERVICE fetchDeals", "error");
+            logError("DEALS SERVICE fetchDeals", error);
             return null;
         }
     }
