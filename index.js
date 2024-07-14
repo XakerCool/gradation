@@ -274,8 +274,10 @@ app.post("/gradation/mark_on_call", async (req, res) => {
         if (link && bxId) {
             if (clients) {
                 await markOnCall(bxId, clients, "clients");
+                res.status(200).json({"status": "success", "message": "Выбранные клиенты успешно отмечены!"});
             } else if (companies) {
                 await markOnCall(bxId, companies, "companies");
+                res.status(200).json({"status": "success", "message": "Выбранные компании успешно отмечены!"});
             } else {
                 res.status(400).json({"status": "error", "message": "Не выбрана ни одна компания/клиент"});
             }
