@@ -86,11 +86,11 @@ async function addDealsToDb(deals) {
 
             if (rows.count === 0) {
                 const paymentDate = deal.PAYMENT_DATE?.toString() === "" ? null : deal.PAYMENT_DATE?.toString();
-                const createDate = deal.DATE_CREATE?.toString() === "" ? null : deal.DATE_CREATE?.toString();
+                const dateCreate = deal.DATE_CREATE?.toString() === "" ? null : deal.DATE_CREATE?.toString();
                 const companyId = deal.COMPANY_ID?.toString() === "0" ? null : deal.COMPANY_ID;
                 // Company does not exist, insert it
                 const insertQuery = 'INSERT INTO deals (title, company_id, date_create, payment_date, opportunity, id_in_bx) VALUES (?, ?, ?, ?, ?, ?)';
-                const insertParams = [deal.TITLE, companyId, createDate, paymentDate, deal.OPPORTUNITY, deal.ID];
+                const insertParams = [deal.TITLE, companyId, dateCreate, paymentDate, deal.OPPORTUNITY, deal.ID];
                 return executeQuery(insertQuery, insertParams);
             } else {
                 // Company already exists, handle as needed (maybe update or skip)
@@ -269,7 +269,7 @@ async function markOnCall(data, table) {
                 query += ` companies`;
                 break;
         }
-        query += ` SET on_call = true WHERE AND id_in_bx = ?`;
+        query += ` SET on_call = true WHERE id_in_bx = ?`;
 
         for (const item of data) {
             await executeQuery(query, [item]);

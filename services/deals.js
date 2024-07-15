@@ -27,7 +27,7 @@ class DealsService {
                     TITLE: deal.TITLE,
                     COMPANY_ID: deal.COMPANY_ID,
                     CONTACT_ID: deal.CONTACT_ID,
-                    CREATE_DATE: deal.DATE_CREATE,
+                    DATE_CREATE: deal.DATE_CREATE,
                     PAYMENT_DATE: deal[paymentDateUserField.FIELD_NAME],
                     OPPORTUNITY: deal.OPPORTUNITY
                 }
@@ -56,7 +56,7 @@ class DealsService {
                     TITLE: deal.TITLE,
                     COMPANY_ID: deal.COMPANY_ID,
                     CONTACT_ID: deal.CONTACT_ID,
-                    CREATE_DATE: deal.DATE_CREATE,
+                    DATE_CREATE: deal.DATE_CREATE,
                     PAYMENT_DATE: deal[paymentDateUserField.FIELD_NAME],
                     OPPORTUNITY: deal.OPPORTUNITY
                 }
