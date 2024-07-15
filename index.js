@@ -127,7 +127,7 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
 
             const maxDealId = await getMaxId( "deals") || 0;
             const newDeals = await dealsService.fetchDealsById(maxDealId);
-            await addDealsToDb(newDeals, );
+            await addDealsToDb(newDeals);
 
             await setSummary();
 
