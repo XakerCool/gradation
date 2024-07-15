@@ -10,7 +10,6 @@ const timeout = require("connect-timeout");
 const {logError} = require("./logger/logger");
 const {addBxLink, getBxCredentials, setConnection, checkIfExists, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getFromDb, getMaxId, markOnCall} = require("./services/db.js");
 
-const {ContactsService} = require("./services/contacts");
 const {CompaniesService} = require("./services/companies");
 const {DealsService} = require("./services/deals");
 
@@ -68,7 +67,6 @@ app.post("/gradation/init", async (req, res) => {
         if (await checkIfExists(raw.bx)) {
             const credentials = await getBxCredentials(raw.bx, key);
             req.session.link = credentials.link; // Сохраняем ссылку в сессии
-            req.session.bxId = credentials.bxId;
             req.session.bx = credentials.bx;
             res.status(200).json({"status": "success", "message": "Ссылка на битрикс успешно получена!", "link": credentials.link});
         } else {
@@ -102,107 +100,12 @@ app.post("/gradation/add_bx", async (req, res) => {
     }
 })
 
-app.get("/gradation/write_all_contacts_to_db", async (req, res) => {
-    try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
-        if (link && bxId) {
-            const contactsService = new ContactsService(link);
-            const contacts = await contactsService.getAllClients();
-            const result = await addContactsToDb(contacts, bxId);
-            res.status(200).json({"status": "success", "affected rows": result.length, "contacts": contacts});
-        } else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
-        }
-    } catch (error) {
-        logError("/get_all_contacts_data_write_to_db", error);
-        res.status(500).json({"status": "error", "message": "Что то пошло не так"})
-    }
-
-})
-
-app.get("/gradation/write_all_companies_to_db", async (req, res) => {
-    try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
-        if (link && bxId) {
-            const companiesService = new CompaniesService(link);
-            const companies = await companiesService.getAllCompanies();
-            const result = await addCompaniesToDb(companies, bxId);
-            res.status(200).json({"status": "success", "affected rows": result.length, "companies": companies});
-        } else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
-        }
-    } catch (error) {
-        logError("/write_all_deals_to_db", error);
-        res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
-    }
-})
-
-app.get("/gradation/write_all_deals_to_db", async (req, res) => {
-    try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
-        if (link && bxId) {
-            const dealsService = new DealsService(link);
-            const deals = await dealsService.fetchDealsByDate("2000-01-01");
-            const result = await addDealsToDb(deals, bxId);
-            res.status(200).json({"status": "success", "affected rows": result.length, "deals": deals});
-        } else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
-        }
-    } catch (error) {
-        logError("/write_all_deals_to_db", error);
-        res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
-    }
-})
-
-app.get("/gradation/write_deals_from_last_deal_date_to_db", async (req, res) => {
-    try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
-        if (link && bxId) {
-            const dealsService = new DealsService(link);
-            const lastDealDate = await getLastDealDateFromSummary(bxId);
-            const deals = await dealsService.fetchDealsByDate(lastDealDate);
-            const result = await addDealsToDb(deals, bxId);
-            res.status(200).json({"status": "success", "affected rows": result?.length, "deals": deals});
-        } else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
-        }
-    } catch (error) {
-        logError("/write_deals_from_last_deal_date_to_db", error);
-        res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
-    }
-})
-
-app.get("/gradation/set_summary", async (req, res) => {
-    try {
-        const link = req.session.link || null;
-        const bxId = req.session.bxId || null;
-        if (link && bxId) {
-            const result = await setSummary(bxId);
-            if (result) {
-                res.status(200).json({"status": "success", "message": "Данные успешно обновлены"});
-            } else {
-                res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
-            }
-        } else {
-            res.status(401).json({"status": "error", "message": "Пожалуйста, сначала пройдите инициализацию"})
-        }
-    } catch (error) {
-        logError("/set_summary", error);
-        res.status(500).json({"status": "error", "message": "Что-то пошло не так"})
-    }
-})
-
 app.post("/gradation/set_and_return_current_data", async (req, res) => {
     try {
         const raw = req.body;
 
         let link = "";
         let bx = "";
-        let bxId = "";
         if (!raw.bx && !raw.link) {
             res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
             return;
@@ -210,40 +113,33 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
         if (await checkIfExists(raw.bx)) {
             const credentials = await getBxCredentials(raw.bx, key);
             link = credentials.link; // Сохраняем ссылку в сессии
-            bxId = credentials.bxId;
             bx = credentials.bx;
         } else {
             res.status(401).json({ "status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!" });
         }
-        if (link && bxId) {
-            const contactsService = new ContactsService(link);
+        if (link) {
             const companiesService = new CompaniesService(link);
             const dealsService = new DealsService(link);
 
-            const maxContactId = await getMaxId(bxId, "contacts");
-            const newContacts = await contactsService.getClientsFromId(maxContactId);
-            await addContactsToDb(newContacts, bxId);
-
-            const maxCompanyId = await getMaxId(bxId, "companies");
+            const maxCompanyId = await getMaxId( "companies") || 0;
             const newCompanies = await companiesService.getCompaniesFromId(maxCompanyId);
-            await addCompaniesToDb(newCompanies, bxId);
+            await addCompaniesToDb(newCompanies);
 
-            const maxDealId = await getMaxId(bxId, "deals");
+            const maxDealId = await getMaxId( "deals") || 0;
             const newDeals = await dealsService.fetchDealsById(maxDealId);
-            await addDealsToDb(newDeals, bxId);
+            await addDealsToDb(newDeals, );
 
-            await setSummary(bxId);
+            await setSummary();
 
-            const allClients = await getFromDb(bxId, "contacts");
-            const allCompanies = await getFromDb(bxId, "companies");
-            const allDeals = await getFromDb(bxId, "deals");
+            const allCompanies = await getFromDb( "companies");
+            const allDeals = await getFromDb( "deals");
 
-            res.status(200).json({ "status": "success", "total": { "clients": allClients.length, "companies": allCompanies.length, "deals": allDeals.length }, "clients": allClients, "companies": allCompanies, "deals": allDeals });
+            res.status(200).json({ "status": "success", "total": { "companies": allCompanies.length, "deals": allDeals.length }, "companies": allCompanies, "deals": allDeals });
         } else {
             res.status(401).json({ "status": "error", "message": "Пожалуйста, сначала пройдите инициализацию" });
         }
     } catch (error) {
-        logError("/write_deals_from_last_deal_date_to_db", error);
+        logError("/set_and_return_current_data", error);
         res.status(500).json({ "status": "error", "message": "Что-то пошло не так" });
     }
 }, haltOnTimedOut);
@@ -254,7 +150,6 @@ app.post("/gradation/mark_on_call", async (req, res) => {
 
         let link = "";
         let bx = "";
-        let bxId = "";
         if (!raw.bx && !raw.link) {
             res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
             return;
@@ -262,21 +157,16 @@ app.post("/gradation/mark_on_call", async (req, res) => {
         if (await checkIfExists(raw.bx)) {
             const credentials = await getBxCredentials(raw.bx, key);
             link = credentials.link; // Сохраняем ссылку в сессии
-            bxId = credentials.bxId;
             bx = credentials.bx;
         } else {
             res.status(401).json({ "status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!" });
         }
 
-        const clients = raw.clients || null;
         const companies = raw.companies || null;
 
-        if (link && bxId) {
-            if (clients) {
-                await markOnCall(bxId, clients, "clients");
-                res.status(200).json({"status": "success", "message": "Выбранные клиенты успешно отмечены!"});
-            } else if (companies) {
-                await markOnCall(bxId, companies, "companies");
+        if (link) {
+            if (companies) {
+                await markOnCall( companies, "companies");
                 res.status(200).json({"status": "success", "message": "Выбранные компании успешно отмечены!"});
             } else {
                 res.status(400).json({"status": "error", "message": "Не выбрана ни одна компания/клиент"});
