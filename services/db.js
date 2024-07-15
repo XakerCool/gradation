@@ -4,22 +4,18 @@ const crypto = require("crypto");
 
 let connection;
 
-async function getFromDb(bxId, table) {
+async function getFromDb(table) {
     try {
         let query = `SELECT * FROM `;
         switch (table.toLowerCase()) {
             case "companies":
                 query += `companies`;
                 break;
-            case "contacts":
-                query += `clients`;
-                break;
             case "deals":
                 query += `deals`;
                 break;
         }
-        query += ` WHERE b_id = ?`;
-        const params = [bxId];
+        const params = [];
         return await executeQuery(query, params);
     } catch (error) {
         logError("getFromDb", error);
@@ -27,46 +23,18 @@ async function getFromDb(bxId, table) {
     }
 }
 
-async function addContactsToDb(contacts, bxId) {
-    try {
-        const insertPromises = contacts.map(async (contact) => {
-            // Check if the contact already exists in the database
-            const checkQuery = 'SELECT COUNT(*) AS count FROM clients WHERE id_in_bx = ? AND b_id = ?';
-            const checkParams = [contact.ID, bxId];
-            const [rows] = await executeQuery(checkQuery, checkParams);
-
-            if (rows.count === 0) {
-                // Contact does not exist, insert it
-                const insertQuery = 'INSERT INTO clients (first_name, last_name, second_name, id_in_bx, assigned_by_id, b_id) VALUES (?, ?, ?, ?, ?, ?)';
-                const insertParams = [contact.NAME, contact.LAST_NAME, contact.SECOND_NAME, contact.ID, contact.ASSIGNED_BY_ID, bxId];
-                return executeQuery(insertQuery, insertParams);
-            } else {
-                // Contact already exists, handle as needed (maybe update or skip)
-                return null; // Return null or handle differently if needed
-            }
-        });
-
-        // Execute all insert queries asynchronously
-        const results = await Promise.all(insertPromises);
-        return results.filter(result => result !== null); // Filter out null results (skipped inserts)
-    } catch (error) {
-        logError("addContactsToDb", error);
-        return null;
-    }
-}
-
-async function addCompaniesToDb(companies, bxId) {
+async function addCompaniesToDb(companies) {
     try {
         const insertPromises = companies.map(async (company) => {
             // Check if the company already exists in the database
-            const checkQuery = 'SELECT COUNT(*) AS count FROM companies WHERE id_in_bx = ? AND b_id = ?';
-            const checkParams = [company.ID, bxId];
+            const checkQuery = 'SELECT COUNT(*) AS count FROM companies WHERE id_in_bx = ?';
+            const checkParams = [company.ID];
             const [rows] = await executeQuery(checkQuery, checkParams);
 
             if (rows.count === 0) {
                 // Company does not exist, insert it
-                const insertQuery = 'INSERT INTO companies (title, id_in_bx, assigned_by_id, b_id) VALUES (?, ?, ?, ?)';
-                const insertParams = [company.TITLE, company.ID, company.ASSIGNED_BY_ID, bxId];
+                const insertQuery = 'INSERT INTO companies (title, id_in_bx, assigned_by_id) VALUES (?, ?, ?)';
+                const insertParams = [company.TITLE, company.ID, company.ASSIGNED_BY_ID];
                 return executeQuery(insertQuery, insertParams);
             } else {
                 // Company already exists, handle as needed (maybe update or skip)
@@ -83,23 +51,19 @@ async function addCompaniesToDb(companies, bxId) {
     }
 }
 
-async function getMaxId(bxId, table) {
+async function getMaxId(table) {
     try {
         let query = `SELECT MAX(id_in_bx) as maxId FROM `;
         switch (table.toLowerCase()) {
             case "companies":
                 query += `companies`;
                 break;
-            case "contacts":
-                query += `clients`;
-                break;
             case "deals":
                 query += `deals`;
                 break;
         }
-        query += ` WHERE b_id = ?`;
 
-        const params = [bxId];
+        const params = [];
         const rows = await executeQuery(query, params);
 
         if (rows.length > 0) {
@@ -113,27 +77,27 @@ async function getMaxId(bxId, table) {
     }
 }
 
-async function addDealsToDb(deals, bxId) {
+async function addDealsToDb(deals) {
     try {
         const insertPromises = deals.map(async (deal) => {
-            const checkQuery = 'SELECT COUNT(*) AS count FROM deals WHERE id_in_bx = ? AND b_id = ?';
-            const checkParams = [deal.ID, bxId];
+            const checkQuery = 'SELECT COUNT(*) AS count FROM deals WHERE id_in_bx = ?';
+            const checkParams = [deal.ID];
             const [rows] = await executeQuery(checkQuery, checkParams);
 
             if (rows.count === 0) {
-                const paymentDate = deal.PAYMENT_DATE.toString() === "" ? null : deal.PAYMENT_DATE.toString();
-                const createDate = deal.CREATE_DATE.toString() === "" ? null : deal.CREATE_DATE.toString();
+                const paymentDate = deal.PAYMENT_DATE?.toString() === "" ? null : deal.PAYMENT_DATE?.toString();
+                const createDate = deal.DATE_CREATE?.toString() === "" ? null : deal.DATE_CREATE?.toString();
                 const companyId = deal.COMPANY_ID?.toString() === "0" ? null : deal.COMPANY_ID;
-                const contactId = deal.CONTACT_ID?.toString() === "0" ? null : deal.CONTACT_ID;
                 // Company does not exist, insert it
-                const insertQuery = 'INSERT INTO deals (title, company_id, contact_id, create_date, payment_date, opportunity, b_id, id_in_bx) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-                const insertParams = [deal.TITLE, companyId, contactId, createDate, paymentDate, deal.OPPORTUNITY, bxId, deal.ID];
+                const insertQuery = 'INSERT INTO deals (title, company_id, date_create, payment_date, opportunity, id_in_bx) VALUES (?, ?, ?, ?, ?, ?)';
+                const insertParams = [deal.TITLE, companyId, createDate, paymentDate, deal.OPPORTUNITY, deal.ID];
                 return executeQuery(insertQuery, insertParams);
             } else {
                 // Company already exists, handle as needed (maybe update or skip)
                 return null; // Return null or handle differently if needed
             }
         })
+        return await Promise.all(insertPromises);
     } catch (error) {
         logError("addDealsToDb", error);
         return null;
@@ -145,7 +109,7 @@ async function addBxLink(bxName, link, key) {
         const encryptedText = encrypt(link, key);
 
         // Insert encrypted link into MySQL database
-        const query = 'INSERT INTO bitrixes (bx, link) VALUES (?, ?)';
+        const query = 'INSERT INTO credentials (bx_name, link) VALUES (?, ?)';
         await executeQuery(query, [bxName, encryptedText]);
 
         return true;
@@ -157,14 +121,14 @@ async function addBxLink(bxName, link, key) {
 async function getBxCredentials(bxName, key) {
     try {
         // Fetch encrypted link from MySQL database
-        const query = 'SELECT * FROM bitrixes WHERE bx = ?';
+        const query = 'SELECT * FROM credentials WHERE bx_name = ?';
         const result = await executeQuery(query, [bxName]);
 
         if (result.length > 0) {
             const encryptedLink = result[0].link;
             const decryptedLink = decrypt(encryptedLink, key);
 
-            return { bxId: result[0].id, link: decryptedLink, bx: result[0].bx }
+            return { bxId: result[0].id, link: decryptedLink, bx: result[0].bx_name }
         } else {
             throw new Error(`No Bitrix link found for ${bxName}`);
         }
@@ -173,45 +137,40 @@ async function getBxCredentials(bxName, key) {
     }
 }
 
-async function setSummary(bxId) {
+async function setSummary() {
     try {
         // Check if a summary row exists for the bxId
         const checkQuery = `
             SELECT COUNT(*) AS count
             FROM summary
-            WHERE b_id = ?
         `;
-        const checkParams = [bxId];
+        const checkParams = [];
         const checkResult = await executeQuery(checkQuery, checkParams);
 
         if (checkResult[0].count > 0) {
             // Update existing row
             const updateQuery = `
                 UPDATE summary
-                SET clients_count = ?,
-                    companies_count = ?,
+                SET companies_count = ?,
                     deals_count = ?,
                     last_deal_date = ?
-                WHERE b_id = ?
             `;
-            const clientsCount = await getClientsCount(bxId);
-            const companiesCount = await getCompaniesCount(bxId);
-            const dealsCount = await getDealsCount(bxId);
-            const lastDealDate = await getLastDealDateFromDeals(bxId);
-            const updateParams = [clientsCount, companiesCount, dealsCount, lastDealDate, bxId];
+            const companiesCount = await getCompaniesCount();
+            const dealsCount = await getDealsCount();
+            const lastDealDate = await getLastDealDateFromDeals();
+            const updateParams = [companiesCount, dealsCount, lastDealDate];
 
             await executeQuery(updateQuery, updateParams);
         } else {
             // Insert new row
             const insertQuery = `
-                INSERT INTO summary (b_id, clients_count, companies_count, deals_count, last_deal_date)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO summary (companies_count, deals_count, last_deal_date)
+                VALUES (?, ?, ?)
             `;
-            const clientsCount = await getClientsCount(bxId);
-            const companiesCount = await getCompaniesCount(bxId);
-            const dealsCount = await getDealsCount(bxId);
-            const lastDealDate = await getLastDealDateFromDeals(bxId);
-            const insertParams = [bxId, clientsCount, companiesCount, dealsCount, lastDealDate];
+            const companiesCount = await getCompaniesCount();
+            const dealsCount = await getDealsCount();
+            const lastDealDate = await getLastDealDateFromDeals();
+            const insertParams = [companiesCount, dealsCount, lastDealDate];
 
             await executeQuery(insertQuery, insertParams);
         }
@@ -224,10 +183,10 @@ async function setSummary(bxId) {
     }
 }
 
-async function getLastDealDateFromSummary(bxId) {
+async function getLastDealDateFromSummary() {
     try {
-        const query = `SELECT last_deal_date AS lastDealDate FROM summary WHERE b_id = ?`;
-        const params = [bxId];
+        const query = `SELECT last_deal_date AS lastDealDate FROM summary`;
+        const params = [];
         const rows = await executeQuery(query, params);
 
         if (rows.length > 0) {
@@ -241,14 +200,13 @@ async function getLastDealDateFromSummary(bxId) {
     }
 }
 
-async function getLastDealDateFromDeals(bxId) {
+async function getLastDealDateFromDeals() {
     try {
         let query = `
-            SELECT MAX(create_date) AS lastDealDate
+            SELECT MAX(date_create) AS lastDealDate
             FROM deals
-            WHERE b_id = ?
         `;
-        const params = [bxId];
+        const params = [];
         const rows = await executeQuery(query, params);
 
         if (rows.length > 0) {
@@ -262,35 +220,13 @@ async function getLastDealDateFromDeals(bxId) {
     }
 }
 
-async function getClientsCount(bxId) {
-    try {
-        let query = `
-            SELECT COUNT(*) AS count
-            FROM clients
-            WHERE b_id = ?
-        `;
-        const params = [bxId];
-        const rows = await executeQuery(query, params);
-
-        if (rows.length > 0) {
-            return rows[0].count;
-        } else {
-            return null; // No deals found for the given bxId
-        }
-    } catch (error) {
-        logError("getClientsCount", error);
-        return null; // Propagate error further if necessary
-    }
-}
-
-async function getDealsCount(bxId) {
+async function getDealsCount() {
     try {
         let query = `
             SELECT COUNT(*) AS count
             FROM deals
-            WHERE b_id = ?
         `;
-        const params = [bxId];
+        const params = [];
         const rows = await executeQuery(query, params);
 
         if (rows.length > 0) {
@@ -304,14 +240,13 @@ async function getDealsCount(bxId) {
     }
 }
 
-async function getCompaniesCount(bxId) {
+async function getCompaniesCount() {
     try {
         let query = `
             SELECT COUNT(*) AS count
             FROM companies
-            WHERE b_id = ?
         `;
-        const params = [bxId];
+        const params = [];
         const rows = await executeQuery(query, params);
 
         if (rows.length > 0) {
@@ -325,22 +260,19 @@ async function getCompaniesCount(bxId) {
     }
 }
 
-async function markOnCall(bxId, data, table) {
+async function markOnCall(data, table) {
     try {
         let query = `UPDATE`
 
         switch (table.toLowerCase()) {
-            case "clients":
-                query += ` clients`;
-                break;
             case "companies":
                 query += ` companies`;
                 break;
         }
-        query += ` SET on_call = true WHERE b_id = ? AND id_in_bx = ?`;
+        query += ` SET on_call = true WHERE AND id_in_bx = ?`;
 
         for (const item of data) {
-            await executeQuery(query, [bxId, item]);
+            await executeQuery(query, [item]);
         }
 
     } catch (error) {
@@ -351,7 +283,7 @@ async function markOnCall(bxId, data, table) {
 
 async function checkIfExists(bxName) {
     try {
-        const query = 'SELECT COUNT(*) AS count FROM bitrixes WHERE bx = ?';
+        const query = 'SELECT COUNT(*) AS count FROM credentials WHERE bx_name = ?';
         const result = await executeQuery(query, [bxName]);
 
         if (result.length > 0 && result[0].count > 0) {
@@ -394,7 +326,7 @@ async function executeQuery(query, params) {
     });
 }
 
-module.exports = { addBxLink, getBxCredentials, checkIfExists, setConnection, addContactsToDb, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getMaxId, getFromDb, markOnCall };
+module.exports = { addBxLink, getBxCredentials, checkIfExists, setConnection, addCompaniesToDb, addDealsToDb, setSummary, getLastDealDateFromSummary, getMaxId, getFromDb, markOnCall };
 
 function setConnection(conn) {
     connection = conn;
