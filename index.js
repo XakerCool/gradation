@@ -125,16 +125,16 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
             const newCompanies = await companiesService.getCompaniesFromId(maxCompanyId);
             await addCompaniesToDb(newCompanies);
 
-            const maxDealId = await getMaxId( "deals") || 0;
-            const newDeals = await dealsService.fetchDealsById(maxDealId);
-            await addDealsToDb(newDeals);
-
-            await setSummary();
+            // const maxDealId = await getMaxId( "deals") || 0;
+            // const newDeals = await dealsService.fetchDealsById(maxDealId);
+            // await addDealsToDb(newDeals);
+            //
+            // await setSummary();
 
             const allCompanies = await getFromDb( "companies");
-            const allDeals = await getFromDb( "deals");
+            // const allDeals = await getFromDb( "deals");
 
-            res.status(200).json({ "status": "success", "total": { "companies": allCompanies.length, "deals": allDeals.length }, "companies": allCompanies, "deals": allDeals });
+            res.status(200).json({ "status": "success", "total": { "companies": allCompanies.length, "deals": 0 }, "companies": allCompanies, "deals": 0 });
         } else {
             res.status(401).json({ "status": "error", "message": "Пожалуйста, сначала пройдите инициализацию" });
         }
