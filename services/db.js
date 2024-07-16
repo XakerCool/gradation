@@ -269,10 +269,10 @@ async function markOnCall(data, assignedById, table) {
                 query += ` companies`;
                 break;
         }
-        query += ` SET on_call = true AND id_in_bx = ? AND assigned_by_id = ?`;
+        query += ` SET on_call = true, assigned_by_id = ? WHERE id_in_bx = ?`;
 
         for (const item of data) {
-            await executeQuery(query, [item, assignedById]);
+            await executeQuery(query, [parseInt(assignedById), item]);
         }
 
     } catch (error) {
