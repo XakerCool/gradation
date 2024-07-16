@@ -260,7 +260,7 @@ async function getCompaniesCount() {
     }
 }
 
-async function markOnCall(data, table) {
+async function markOnCall(data, assignedById, table) {
     try {
         let query = `UPDATE`
 
@@ -269,10 +269,10 @@ async function markOnCall(data, table) {
                 query += ` companies`;
                 break;
         }
-        query += ` SET on_call = true AND id_in_bx = ?`;
+        query += ` SET on_call = true AND id_in_bx = ? AND assigned_by_id = ?`;
 
         for (const item of data) {
-            await executeQuery(query, [item]);
+            await executeQuery(query, [item, assignedById]);
         }
 
     } catch (error) {

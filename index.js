@@ -151,6 +151,7 @@ app.post("/gradation/mark_on_call", async (req, res) => {
 
         let link = "";
         let bx = "";
+        const assignedById = raw.assigned_by_id;
         if (!raw.bx && !raw.link) {
             res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
             return;
@@ -167,7 +168,7 @@ app.post("/gradation/mark_on_call", async (req, res) => {
 
         if (link) {
             if (companies) {
-                await markOnCall( companies, "companies");
+                await markOnCall( companies, assignedById, "companies");
                 res.status(200).json({"status": "success", "message": "Выбранные компании успешно отмечены!"});
             } else {
                 res.status(400).json({"status": "error", "message": "Не выбрана ни одна компания/клиент"});
