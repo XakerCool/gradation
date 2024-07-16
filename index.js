@@ -145,6 +145,42 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
     }
 }, haltOnTimedOut);
 
+app.post("/gradation/mark_on_call", async (req, res) => {
+    try {
+        const raw = req.body;
+
+        let link = "";
+        let bx = "";
+        if (!raw.bx && !raw.link) {
+            res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
+            return;
+        }
+        if (await checkIfExists(raw.bx)) {
+            const credentials = await getBxCredentials(raw.bx, key);
+            link = credentials.link; // Сохраняем ссылку в сессии
+            bx = credentials.bx;
+        } else {
+            res.status(401).json({ "status": "error", "message": "Данный битрикс отсутствует в системе, пожалуйста, пройдите авторизацию!" });
+        }
+
+        const companies = raw.companies || null;
+
+        if (link) {
+            if (companies) {
+                await markOnCall( companies, "companies");
+                res.status(200).json({"status": "success", "message": "Выбранные компании успешно отмечены!"});
+            } else {
+                res.status(400).json({"status": "error", "message": "Не выбрана ни одна компания/клиент"});
+            }
+        } else {
+            res.status(401).json({ "status": "error", "message": "Пожалуйста, сначала пройдите инициализацию" });
+        }
+    } catch (error) {
+        logError("/gradation/mark_on_call", error);
+        res.status(500).json({"status": "error", "message": "Что-то пошло не так"});
+    }
+})
+
 
 app.listen(PORT, () => {
     connection.connect((err) => {
