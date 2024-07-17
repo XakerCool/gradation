@@ -152,7 +152,6 @@ app.post("/gradation/mark_on_call", async (req, res) => {
         let link = "";
         let bx = "";
         const assignedById = raw.assigned_by_id;
-        console.log(assignedById)
         if (!raw.bx && !raw.link) {
             res.status(400).json({ "status": "error", "message": "Отсутствует название системы!" });
             return;
