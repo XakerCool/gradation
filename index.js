@@ -59,6 +59,18 @@ function haltOnTimedOut(req, res, next) {
 
 app.post("/gradation/init", async (req, res) => {
     try {
+        connection.ping((err) => {
+            if (err) {
+                console.error('Connection lost, reconnecting...', err);
+                connection.connect((err) => {
+                    if (err) {
+                        console.error('Error reconnecting to the database:', err);
+                        return res.status(500).json({"status":error, "message": "Не удалось подключиться к базе данных"});
+                    }
+                    console.log('Reconnected to the database');
+                });
+            }
+        });
         const raw = req.body;
         if (!raw.bx && !raw.link) {
             res.status(400).json({"status": "error", "message": "Отсутствует название системы!"});
@@ -80,6 +92,18 @@ app.post("/gradation/init", async (req, res) => {
 
 app.post("/gradation/add_bx", async (req, res) => {
     try {
+        connection.ping((err) => {
+            if (err) {
+                console.error('Connection lost, reconnecting...', err);
+                connection.connect((err) => {
+                    if (err) {
+                        console.error('Error reconnecting to the database:', err);
+                        return res.status(500).json({"status":error, "message": "Не удалось подключиться к базе данных"});
+                    }
+                    console.log('Reconnected to the database');
+                });
+            }
+        });
         const raw = req.body;
         if (!raw.bx && !raw.link) {
             res.status(400).json({"status": "error", "message": "Отсутствует название системы или ссылка для входящего вебхука!"});
@@ -102,6 +126,18 @@ app.post("/gradation/add_bx", async (req, res) => {
 
 app.post("/gradation/set_and_return_current_data", async (req, res) => {
     try {
+        connection.ping((err) => {
+            if (err) {
+                console.error('Connection lost, reconnecting...', err);
+                connection.connect((err) => {
+                    if (err) {
+                        console.error('Error reconnecting to the database:', err);
+                        return res.status(500).json({"status":error, "message": "Не удалось подключиться к базе данных"});
+                    }
+                    console.log('Reconnected to the database');
+                });
+            }
+        });
         const raw = req.body;
 
         let link = "";
@@ -146,6 +182,18 @@ app.post("/gradation/set_and_return_current_data", async (req, res) => {
 
 app.post("/gradation/mark_on_call", async (req, res) => {
     try {
+        connection.ping((err) => {
+            if (err) {
+                console.error('Connection lost, reconnecting...', err);
+                connection.connect((err) => {
+                    if (err) {
+                        console.error('Error reconnecting to the database:', err);
+                        return res.status(500).json({"status":error, "message": "Не удалось подключиться к базе данных"});
+                    }
+                    console.log('Reconnected to the database');
+                });
+            }
+        });
         const raw = req.body;
 
         let link = "";
